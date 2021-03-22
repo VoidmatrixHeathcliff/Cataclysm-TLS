@@ -1,9 +1,8 @@
 # Cataclysm-TLS: The Last Shelter
 
-《大灾变：最后避难所》  
-你将在游戏中扮演一个 AI 系统的角色来帮助避难所中最后的幸存者们生存尽可能长的时间
+[English](README.md) · [简体中文](/docs/readme_cn.md) · [日本語](/docs/readme_ja.md)
 
 Cataclysm - The Last Shelter.  
 Play as an AI system to help the final survivors survive as long as possible in the shelter in a post-apocalyptic world.
 
-***正在开发，敬请期待***
+***Under development, Coming soon***
