@@ -1,0 +1,15 @@
+{
+    "entry": "scripts/MainGame.lua",
+    "package": {
+        "path": [
+            "scripts/?.lua",
+            "scripts/scenes/?.lua"            
+        ],
+        "cpath": [
+            "modules/?.dll"
+        ]
+    },
+    "command": [
+        
+    ]
+}
