@@ -1,3 +1,5 @@
+os.execute("CHCP 65001")
+
 SceneRegister = require("SceneRegister")
 
 Window  = require("@Window")

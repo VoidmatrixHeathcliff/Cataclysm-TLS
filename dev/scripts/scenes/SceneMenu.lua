@@ -48,7 +48,7 @@ return
 
         btnNewGame = GUI.ImageButton({
             texture = textureBtnNewGameIdle,
-            rect = {x = 100, y = 260, w = 125, h = 28},
+            rect = {x = 100, y = 280, w = 125, h = 28},
             on_click = function()
                 Window.SetCursorStyle(Window.CURSOR_ARROW)
                 LoadScene("ModuleSelector")
@@ -66,7 +66,7 @@ return
 
         btnLoadGame = GUI.ImageButton({
             texture = textureBtnLoadGameIdle,
-            rect = {x = 250, y = 260, w = 125, h = 28},
+            rect = {x = 250, y = 280, w = 125, h = 28},
             on_click = function()
                 Window.SetCursorStyle(Window.CURSOR_ARROW)
             end,
@@ -83,7 +83,7 @@ return
 
         btnSetting = GUI.ImageButton({
             texture = textureBtnSettingIdle,
-            rect = {x = 400, y = 260, w = 60, h = 28},
+            rect = {x = 400, y = 280, w = 60, h = 28},
             on_click = function()
                 Window.SetCursorStyle(Window.CURSOR_ARROW)
             end,
@@ -100,7 +100,7 @@ return
 
         btnQuit = GUI.ImageButton({
             texture = textureBtnQuitIdle,
-            rect = {x = 490, y = 260, w = 60, h = 28},
+            rect = {x = 490, y = 280, w = 60, h = 28},
             on_click = function()
                 Window.SetCursorStyle(Window.CURSOR_ARROW)
                 QuitGame()
