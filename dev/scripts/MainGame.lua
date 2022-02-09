@@ -5,6 +5,7 @@ SceneRegister = require("SceneRegister")
 Window  = require("@Window")
 Input   = require("@Input")
 Time    = require("@Time")
+Graphic = require("@Graphic")
 
 local GAME_VERSION <const> = "Dev 0.0.1"
 
@@ -36,6 +37,19 @@ end
 
 QuitGame = function()
     isQuitGame = true
+end
+
+RegisterPool = {}
+
+RegisterPool.ShowQuitGameConfirm = function(msg, cb_quit)
+    if Window.ConfirmBox(
+        Window.MSGBOX_INFO, 
+        "退出游戏", msg or "确定要退出游戏吗？", 
+        "退出游戏", "取消"
+    ) then
+        if cb_quit then cb_quit() end
+        QuitGame()
+    end
 end
 
 Window.Create(WINDOW_TITLE, WINDOW_RECT)

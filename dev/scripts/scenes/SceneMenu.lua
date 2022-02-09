@@ -17,7 +17,6 @@ local textureBtnQuitIdle, textureBtnQuitHover
 
 local btnNewGame, btnLoadGame, btnSetting, btnQuit
 
-local rectWindow = {x = 0, y = 0, w = 0, h = 0}
 local rectTitle = {x = 25, y = 25, w = 0, h = 0}
 
 local isSplashScreen = false
@@ -25,10 +24,17 @@ local isSplashScreen = false
 return
 {
     OnInit = function()
-        musicBack = Media.MusicFile("resources/menu_bgm.mp3")
-        Media.PlayMusic(musicBack, -1)
+        if not RegisterPool.MUSIC_MENU then
+            RegisterPool.MUSIC_MENU = Media.MusicFile("resources/menu_bgm.mp3")
+        end
+        
+        if not Media.CheckMusicPlaying() then
+            Media.PlayMusic(RegisterPool.MUSIC_MENU, -1)
+        end
 
-        soundBtn = Media.SoundFile("resources/menu_btn_sound.wav")
+        if not RegisterPool.SOUND_MENUBTN then
+            RegisterPool.SOUND_MENUBTN = Media.SoundFile("resources/menu_btn_sound.wav")
+        end
 
         textureBack = Graphic.CreateTexture(Graphic.ImageFile("resources/menu_back.jpg"))
         
@@ -44,7 +50,8 @@ return
         textureBtnQuitIdle = Graphic.CreateTexture(Graphic.ImageFile("resources/btn_Quit_idle.png"))
         textureBtnQuitHover = Graphic.CreateTexture(Graphic.ImageFile("resources/btn_Quit_hover.png"))
 
-        rectWindow.w, rectWindow.h = Window.GetDrawableSize()
+        RegisterPool.RECT_WINDOW = {x = 0, y = 0, w = 0, h = 0}
+        RegisterPool.RECT_WINDOW.w, RegisterPool.RECT_WINDOW.h = Window.GetDrawableSize()
 
         btnNewGame = GUI.ImageButton({
             texture = textureBtnNewGameIdle,
@@ -54,7 +61,7 @@ return
                 LoadScene("ModuleSelector")
             end,
             on_enter = function()
-                soundBtn:Play(0)
+                RegisterPool.SOUND_MENUBTN:Play(0)
                 Window.SetCursorStyle(Window.CURSOR_HAND)
                 btnNewGame.SetTexture(textureBtnNewGameHover)
             end,
@@ -71,7 +78,7 @@ return
                 Window.SetCursorStyle(Window.CURSOR_ARROW)
             end,
             on_enter = function()
-                soundBtn:Play(0)
+                RegisterPool.SOUND_MENUBTN:Play(0)
                 Window.SetCursorStyle(Window.CURSOR_HAND)
                 btnLoadGame.SetTexture(textureBtnLoadGameHover)
             end,
@@ -88,7 +95,7 @@ return
                 Window.SetCursorStyle(Window.CURSOR_ARROW)
             end,
             on_enter = function()
-                soundBtn:Play(0)
+                RegisterPool.SOUND_MENUBTN:Play(0)
                 Window.SetCursorStyle(Window.CURSOR_HAND)
                 btnSetting.SetTexture(textureBtnSettingHover)
             end,
@@ -106,7 +113,7 @@ return
                 QuitGame()
             end,
             on_enter = function()
-                soundBtn:Play(0)
+                RegisterPool.SOUND_MENUBTN:Play(0)
                 Window.SetCursorStyle(Window.CURSOR_HAND)
                 btnQuit.SetTexture(textureBtnQuitHover)
             end,
@@ -127,14 +134,14 @@ return
     end,
 
     OnUpdate = function()
-        Graphic.RenderTexture(textureBack, rectWindow)
+        Graphic.RenderTexture(textureBack, RegisterPool.RECT_WINDOW)
 
         if math.random(0, 100) % 25 == 0 then
             isSplashScreen = not isSplashScreen 
         end
         if isSplashScreen then
             Graphic.SetDrawColor(COLOR_SPLASH)
-            Graphic.DrawRectangle(rectWindow, true)
+            Graphic.DrawRectangle(RegisterPool.RECT_WINDOW, true)
         end
 
         Graphic.RenderTexture(textureTitle, rectTitle)
@@ -143,10 +150,6 @@ return
     end,
 
     OnUnload = function()
-        Media.StopMusic()
-        
-        musicBack, soundBtn = nil, nil
-
         textureBack, textureTitle = nil, nil
         textureBtnNewGameIdle, textureBtnNewGameHover = nil, nil
         textureBtnLoadGameIdle, textureBtnLoadGameHover = nil, nil

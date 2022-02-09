@@ -1,5 +1,6 @@
 Input   = require("@Input")
 Graphic = require("@Graphic")
+String  = require("@String")
 
 local FUNC_EMPTY <const> = function() end
 
@@ -41,10 +42,14 @@ local BaseButton = function(params)
 
     ele._texture = params.texture
     ele._rect = params.rect or {x = 0, y = 0, w = 135, h = 75}
+    ele._has_frame = params.has_frame or false
     ele._on_enter = params.on_enter or FUNC_EMPTY
     ele._on_leave = params.on_leave or FUNC_EMPTY
     ele._on_click = params.on_click or FUNC_EMPTY
+    ele._on_down = params.on_down or FUNC_EMPTY
+    ele._on_up = params.on_up or FUNC_EMPTY
     ele._is_hover = false
+    ele._is_down = false
 
     ele.OnInput = function(event)
         if event == Input.EVENT_MOUSEMOTION then
@@ -55,9 +60,20 @@ local BaseButton = function(params)
                 ele._on_leave()
             end
             ele._is_hover = isHover
-        elseif event == Input.EVENT_MOUSEBTNUP and ele._is_hover
-            and Input.GetMouseButtonID() == Input.MOUSEBTN_LEFT then
-            ele._on_click()
+        elseif event == Input.EVENT_MOUSEBTNDOWN then
+            if Input.GetMouseButtonID() == Input.MOUSEBTN_LEFT 
+                and ele._is_hover then
+                if not ele._is_down then ele._on_down() end
+                ele._is_down = true
+            end
+        elseif event == Input.EVENT_MOUSEBTNUP then
+            if Input.GetMouseButtonID() == Input.MOUSEBTN_LEFT then
+                if ele._is_down then ele._on_up() end
+                ele._is_down = false
+                if ele._is_hover then
+                    ele._on_click()
+                end
+            end
         end
     end
 
@@ -126,6 +142,48 @@ return
 
         ele.OnUpdate = function()
             Graphic.RenderTexture(ele._texture, ele._rect)
+
+            if ele._has_frame then
+                if ele._is_down then
+                    Graphic.SetDrawColor(COLOR_BLACK)
+                    Graphic.DrawLine(
+                        {x = ele._rect.x, y = ele._rect.y}, 
+                        {x = ele._rect.x + ele._rect.w, y = ele._rect.y}
+                    )
+                    Graphic.DrawLine(
+                        {x = ele._rect.x, y = ele._rect.y}, 
+                        {x = ele._rect.x, y = ele._rect.y + ele._rect.h}
+                    )
+                    Graphic.SetDrawColor(COLOR_WHITE)
+                    Graphic.DrawLine(
+                        {x = ele._rect.x + ele._rect.w, y = ele._rect.y}, 
+                        {x = ele._rect.x + ele._rect.w, y = ele._rect.y + ele._rect.h}
+                    )
+                    Graphic.DrawLine(
+                        {x = ele._rect.x, y = ele._rect.y + ele._rect.h}, 
+                        {x = ele._rect.x + ele._rect.w, y = ele._rect.y + ele._rect.h}
+                    )
+                else
+                    Graphic.SetDrawColor(COLOR_WHITE)
+                    Graphic.DrawLine(
+                        {x = ele._rect.x, y = ele._rect.y}, 
+                        {x = ele._rect.x + ele._rect.w, y = ele._rect.y}
+                    )
+                    Graphic.DrawLine(
+                        {x = ele._rect.x, y = ele._rect.y}, 
+                        {x = ele._rect.x, y = ele._rect.y + ele._rect.h}
+                    )
+                    Graphic.SetDrawColor(COLOR_BLACK)
+                    Graphic.DrawLine(
+                        {x = ele._rect.x + ele._rect.w, y = ele._rect.y}, 
+                        {x = ele._rect.x + ele._rect.w, y = ele._rect.y + ele._rect.h}
+                    )
+                    Graphic.DrawLine(
+                        {x = ele._rect.x, y = ele._rect.y + ele._rect.h}, 
+                        {x = ele._rect.x + ele._rect.w, y = ele._rect.y + ele._rect.h}
+                    )
+                end
+            end            
         end
 
         ele.SetTexture = function(new_texture)
@@ -140,7 +198,6 @@ return
         local ele = BaseElement()
 
         ele._rect = params.rect or {x = 0, y = 0, w = 250, h = 0}
-        ele._rect_valid = {x = ele._rect.x + 5, y = ele._rect.y, w = ele._rect.w - 10, h = ele._rect.h}
         ele._font_text_item = params.font_text_item
         ele._font_page_num = params.font_page_num
         ele._num_item_per_page = params.num_item_per_page or 10
@@ -150,7 +207,7 @@ return
 
         ele._idx_page, ele._idx_item = 1, 1
         ele._rect.h = ele._num_item_per_page * ele._height_item
-        ele._rect_valid.h = ele._rect.h
+        ele._rect_valid = {x = ele._rect.x + 5, y = ele._rect.y, w = ele._rect.w - 10, h = ele._rect.h}
         ele._is_down_btn_prev, ele._is_down_btn_next = false, false
         ele._rect_btn_prev = {
             x = ele._rect.x,
@@ -360,16 +417,191 @@ return
         local ele = BaseElement()
 
         ele._rect = params.rect or {x = 0, y = 0, w = 250, h = 0}
-        ele._rect_valid = {x = ele._rect.x + 5, y = ele._rect.y, w = ele._rect.w - 10, h = ele._rect.h}
         ele._font = params.font
         ele._num_line_per_page = params.num_line_per_page or 10
         ele._height_line = params.height_line or 40
-        ele._text = params.text or ""
+        ele._text = params.text or "无内容"
 
-        ele.OnInput = FUNC_EMPTY
+        ele._idx_page = 1
+        ele._rect.h = ele._num_line_per_page * ele._height_line + 10
+        ele._rect_valid = {
+            x = ele._rect.x + 5, 
+            y = ele._rect.y + 5, 
+            w = ele._rect.w - 10, 
+            h = ele._rect.h - 10
+        }
+        ele._is_down_btn_prev, ele._is_down_btn_next = false, false
+        ele._rect_btn_prev = {
+            x = ele._rect.x + ele._rect.w, 
+            y = ele._rect.y,
+            w = 20,
+            h = ele._rect.h * 0.5
+        }
+        ele._rect_btn_next = {
+            x = ele._rect.x + ele._rect.w, 
+            y = ele._rect.y + ele._rect_btn_prev.h,
+            w = ele._rect_btn_prev.w,
+            h = ele._rect_btn_prev.h
+        }
+        ele._points_btn_prev = {
+            {
+                x = ele._rect_btn_prev.x + ele._rect_btn_prev.w * 0.5, 
+                y = ele._rect_btn_prev.y + ele._rect_btn_prev.h * 0.38
+            },
+            {
+                x = ele._rect_btn_prev.x + ele._rect_btn_prev.w * 0.2,
+                y = ele._rect_btn_prev.y + ele._rect_btn_prev.h * 0.62
+            },
+            {
+                x = ele._rect_btn_prev.x + ele._rect_btn_prev.w * 0.8,
+                y = ele._rect_btn_prev.y + ele._rect_btn_prev.h * 0.62
+            }
+        }
+        ele._points_btn_next = {
+            {
+                x = ele._rect_btn_next.x + ele._rect_btn_next.w * 0.5, 
+                y = ele._rect_btn_next.y + ele._rect_btn_next.h * 0.62
+            },
+            {
+                x = ele._rect_btn_next.x + ele._rect_btn_next.w * 0.2,
+                y = ele._rect_btn_next.y + ele._rect_btn_next.h * 0.38
+            },
+            {
+                x = ele._rect_btn_next.x + ele._rect_btn_next.w * 0.8,
+                y = ele._rect_btn_next.y + ele._rect_btn_next.h * 0.38
+            }
+        }
+        local textLines = {}
+        string.gsub(ele._text, "[^\n]+", 
+            function(str_line) table.insert(textLines, str_line) end)
+        ele._texture_list_text = {}
+        for _, text in ipairs(textLines) do
+            local idxStart, lenFragment, lenText = 1, 1, String.UTF8Len(text)
+            while idxStart <= lenText do
+                local width, _ = Graphic.GetTextSize(ele._font, String.UTF8Sub(text, idxStart, lenFragment))
+                while idxStart + lenFragment <= lenText and width <= ele._rect_valid.w do
+                    lenFragment = lenFragment + 1
+                    width, _ = Graphic.GetTextSize(ele._font, String.UTF8Sub(text, idxStart, lenFragment))
+                end
+                table.insert(
+                    ele._texture_list_text, 
+                    Graphic.CreateTexture(
+                        Graphic.TextImageQuality(
+                            ele._font, 
+                            String.UTF8Sub(text, idxStart, lenFragment),
+                            COLOR_WHITE
+                        )
+                    )
+                )
+                idxStart = idxStart + lenFragment
+            end
+        end
+        ele._total_page_num = math.ceil(#ele._texture_list_text / ele._num_line_per_page)
+        ele._is_enable_btn_prev = false
+        ele._is_enable_btn_next = not (ele._idx_page == ele._total_page_num)
+
+        ele.OnInput = function(event)
+            if event == Input.EVENT_MOUSEBTNDOWN then
+                if Input.GetMouseButtonID() == Input.MOUSEBTN_LEFT then
+                    if ele._is_enable_btn_prev and CheckCursorInRect(ele._rect_btn_prev) then
+                        ele._is_down_btn_prev = true
+                    elseif ele._is_enable_btn_next and CheckCursorInRect(ele._rect_btn_next) then
+                        ele._is_down_btn_next = true
+                    end
+                end
+            elseif event == Input.EVENT_MOUSEBTNUP then
+                if ele._is_down_btn_prev then
+                    ele._is_down_btn_prev = false
+                    if ele._is_enable_btn_prev then
+                        ele._idx_page = ele._idx_page - 1
+                        ele._is_enable_btn_prev = not (ele._idx_page == 1)
+                        ele._is_enable_btn_next = not (ele._idx_page == ele._total_page_num)
+                    end
+                elseif ele._is_down_btn_next then
+                    ele._is_down_btn_next = false
+                    if ele._is_enable_btn_next then
+                        ele._idx_page = ele._idx_page + 1
+                        ele._is_enable_btn_prev = not (ele._idx_page == 1)
+                        ele._is_enable_btn_next = not (ele._idx_page == ele._total_page_num)
+                    end
+                end
+            end
+        end
 
         ele.OnUpdate = function()
+            Graphic.SetDrawColor(COLOR_BLACK)
+            Graphic.DrawRectangle(ele._rect, true)
 
+            for i = 1, ele._num_line_per_page do
+                local idxText = (ele._idx_page - 1) * ele._num_line_per_page + i
+                if idxText > #ele._texture_list_text then break end
+                local width, height = ele._texture_list_text[idxText]:Size()
+                local rectDst = {
+                    x = ele._rect_valid.x,
+                    y = ele._rect_valid.y + (i - 1) * ele._height_line,
+                    w = math.min(width, ele._rect_valid.w),
+                    h = ele._height_line
+                }
+                if ele._height_line > height then
+                    rectDst.y = rectDst.y + (ele._height_line - height) / 2
+                    rectDst.h = height
+                end
+                Graphic.RenderTexture(ele._texture_list_text[idxText], rectDst)
+            end
+
+            if ele._is_down_btn_prev then
+                Graphic.SetDrawColor(COLOR_GRAY)
+                Graphic.DrawRectangle(ele._rect_btn_prev, true)
+                Graphic.SetDrawColor(COLOR_WHITE)
+                Graphic.DrawTriangle(ele._points_btn_prev[1], 
+                    ele._points_btn_prev[2], ele._points_btn_prev[3], true)
+            else
+                Graphic.SetDrawColor(COLOR_WHITE)
+                Graphic.DrawRectangle(ele._rect_btn_prev, true)
+                Graphic.SetDrawColor(COLOR_GRAY)
+                Graphic.DrawTriangle(ele._points_btn_prev[1], 
+                    ele._points_btn_prev[2], ele._points_btn_prev[3], true)
+            end
+            if not ele._is_enable_btn_prev then
+                Graphic.SetDrawColor(COLOR_TRANSWHITE)
+                Graphic.DrawRectangle(ele._rect_btn_prev, true)
+            end
+
+            if ele._is_down_btn_next then
+                Graphic.SetDrawColor(COLOR_GRAY)
+                Graphic.DrawRectangle(ele._rect_btn_next, true)
+                Graphic.SetDrawColor(COLOR_WHITE)
+                Graphic.DrawTriangle(ele._points_btn_next[1], 
+                    ele._points_btn_next[2], ele._points_btn_next[3], true)
+            else
+                Graphic.SetDrawColor(COLOR_WHITE)
+                Graphic.DrawRectangle(ele._rect_btn_next, true)
+                Graphic.SetDrawColor(COLOR_GRAY)
+                Graphic.DrawTriangle(ele._points_btn_next[1], 
+                    ele._points_btn_next[2], ele._points_btn_next[3], true)
+            end
+            if not ele._is_enable_btn_next then
+                Graphic.SetDrawColor(COLOR_TRANSWHITE)
+                Graphic.DrawRectangle(ele._rect_btn_next, true)
+            end
+
+            Graphic.SetDrawColor(COLOR_GRAY)
+            Graphic.DrawLine(
+                {
+                    x = ele._rect_btn_prev.x, 
+                    y = ele._rect_btn_prev.y + ele._rect_btn_prev.h
+                }, 
+                {
+                    x = ele._rect_btn_prev.x + ele._rect_btn_prev.w, 
+                    y = ele._rect_btn_prev.y + ele._rect_btn_prev.h
+                }
+            )
+
+            Graphic.SetDrawColor(COLOR_WHITE)
+            Graphic.DrawRectangle(ele._rect)
         end
+    
+        table.insert(elementList, ele)
+        return ele
     end
 }
